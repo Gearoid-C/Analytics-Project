@@ -1,0 +1,144 @@
+---
+title: "Safe Suds Study"
+subtitle: "Exploring the link between Handwashing Facilities and HIV Transmission Rates"
+author: "Gearóid Campbell"
+date: "07 April 2024"
+format: html
+theme: flatly
+execute: 
+  echo: false
+  warning: false
+  messsage: false
+---
+## Welcome from the project designer!
+
+Hello! Welcome to my Quarto Project as part of my AC584 Project for the 2023/24 Academic Year. I am currently completing an MSc in Accounting at Dublin City University's Business School and this is part of the assessment for my 'Data Analytics for Accounting and Business' module.
+
+The title, as seen above, is 'Exploring the link between Handwashing Facilities and HIV Transmission Rates' . The project will also have a look at another indicator: GDP per capita.  
+The aim of this project is to investigate the possible links that may exist between the above metrics and tell a story of how these impact life in a particular country or region. 
+I hope you enjoy looking around my project, and if you have any questions or feedback, I would be more than happy to hear them at gearoid.campbell23@mail.dcu.ie. 
+
+```{r}
+#| label: setup
+#| include: false
+
+# Libraries 
+library (tidyverse)
+library (plotly)
+library (ggplot2)
+
+# Importing Datasets
+
+unicef_indicator_1 <- read_csv("unicef_indicator_1.csv")
+unicef_indicator_2 <- read_csv("unicef_indicator_2.csv")
+unicef_metadata <- read_csv("unicef_metadata.csv")
+
+# Joining Datasets
+
+data_join <- full_join(unicef_indicator_1, unicef_indicator_2)
+data_join_1 <- full_join(unicef_indicator_2, unicef_metadata)
+data_join_2 <- full_join(unicef_indicator_1, unicef_metadata)
+```
+## Visualisation 1
+**The percentage of the population (on average) that does not have home handwashing facilities: Breakdown Per Country**
+```{r}
+map_world <- map_data("world")
+map_data_join <- full_join(data_join, map_world, by = c("country" = "region"))
+ggplot(map_data_join) +
+  aes(x = long, y = lat, group = group, fill = as.numeric(obs_value)) +
+  geom_polygon() +
+  scale_fill_gradient(name = "%", low = "green", high = "red") +
+  xlab("Longitude") +
+  ylab("Latitude")  +
+  ggtitle("Percentage of population with no handwashing facilities at home")
+```
+This first visualisation allows us to analyse the average population of each country that does not have home handwashing facilities. 
+
+Does any country surprise you? Did you think that country would have better or worse results?
+
+## Visualisation 2
+**Mother-to-child HIV transmission rate**
+
+```{r}
+
+timeseries_plot_1 <- data_join_1 %>%
+  ggplot() +
+  aes(time_period, obs_value_1, color = country) +
+  geom_line() +
+  labs(x = "Time Period", y = "Observation Value") +
+  ggtitle("Mother-to-child HIV transmission rate - Rate per 100 of Population") +
+  theme(legend.position = "none")
+
+timeseries_plot_1
+
+```
+
+This second visualisation allows us to see how the mother-to-child HIV transmission rate has increased and decreased over the last 25 years.
+
+## Visualisation 3
+**How does GDP impact on life expectancy?**
+
+```{r}
+filtered_data <- unicef_metadata %>%
+  filter(year >= 2013 & year <= 2021)
+
+ggplot(filtered_data, aes(x = `GDP per capita (constant 2015 US$)`, y = `Life expectancy at birth, total (years)`, label = country)) +
+  geom_point(alpha = 0.1) +
+  facet_wrap(~ year) +
+  scale_x_continuous(
+    limits = c(0, 60000),
+    breaks = c(20000, 50000),
+    labels = scales::unit_format(unit = "K", scale = .001)
+  ) +
+  labs(
+    x = "GDP per Capita (constant 2015 US$)", 
+    y = "Life Expectancy",
+    title = "Changes in Life Expectancy Against GDP from 2013 to 2021"
+  ) +
+  theme_classic() +
+  theme(
+    text = element_text(family = "Comic Sans MS", color = "blue", size = 12),
+    plot.title = element_text(hjust = 0.5) # Center the title
+  )
+```
+## Discussion
+
+In the project, we have observed the global disparity in handwashing facilities and mother-to-child HIV transmission rate. The provision of clean and safe water is a fundamental human necessity that is included in the UN’s Sustainable Development Goal 6: Clean Water and Sanitation. However, much of the world's population does not have access to this basic need, especially in Africa and South America. The issue is compounded in these regions by the high mother-to-child HIV transmission rates. In contrast, there is limited data on European countries, indicating that they do not face significant issues in these regards.
+The lack of handwashi
+ng facilities is not just limited to individuals and families who lack them in their homes. It reflects the inadequate hygiene infrastructure and unequal distribution of resources worldwide.
+For instance, if we look at visualisation two, we see that 93.62% of the population in Liberia does not have access to home handwashing facilities. This is concerning, given that the population is just over 5 million, similar to Ireland's population. If over 90% of the Irish population lacked access to handwashing facilities in their homes, the situation would be unthinkable. I often say to my parents that the water pressure or heat from the shower is mediocre, yet how fortunate am I to even possess these home sanitation resources?
+
+The lack of handwashing facilities is not merely a hygiene issue; it is an issue of equality, fairness, and basic human needs. Notably, Liberia exports some of the world's finest minerals, such as gold and iron ore, yet the majority of its population does not even have access to basic sanitation facilities.
+
+
+## Visualisation 4
+**Does handwashing facilities depend on the continent?**
+```{r}
+data_join %>%
+  filter(country %in% c("Mali", "Bolivia", "Indonesia", "Serbia"), time_period == 2014) %>%
+  group_by(country) %>%
+  summarise(m_obs = mean(obs_value, na.rm = TRUE)) %>%
+  ggplot() +
+  aes(reorder(country, m_obs), m_obs, fill = country) +
+  geom_col() +
+  labs(x = "Country", y = "Average of Population with no handwashing facilities", title = "Handwashing facilities in countries in different continents") + # moved ggtitle into labs()
+  theme(legend.position = "none", 
+        panel.background = element_blank(),
+        plot.title = element_text(color = "purple", size = 15))
+```
+## Conclusion
+Conclusion
+Firstly, I hope that you enjoyed looking through my project and found the analysis useful. Taking the time to understand the world around us and the unfair sharing of resources is critical to a better knowledge and appreciation of what we already possess. 
+
+We can conclude with as many outcomes as possible but here are a few I think are really important to take away: 
+
+There are still a significant amount of people around the world that do not have home handwashing facilities.
+There are still many parts of the world that have a major issue with containing HIV. 
+Countries in Africa and South America are the worst impacted. 
+There is no clear correlation between handwashing facilities and HIV transmission rates.
+There is a clear negative correlation between GDPs per capita and HIV transmission rates up to a certain point, where the HIV problem is so large that the limited GDP per capita does not make a difference. 
+We should be appreciative of all we have and remember there are many people who would wish they were in our position. 
+Again, many thanks for your time and feel free to send me an email to the email address in the introduction with any feedback/comments. All the best! 
+
+
+
